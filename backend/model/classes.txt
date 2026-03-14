@@ -1,0 +1,15 @@
+Acne
+Actinic Keratosis
+Basal Cell Carcinoma
+Chickenpox
+Dermato Fibroma
+Dyshidrotic Eczema
+Melanoma
+Nail Fungus
+Nevus
+Normal Skin
+Pigmented Benign Keratosis
+Ringworm
+Seborrheic Keratosis
+Squamous Cell Carcinoma
+Vascular Lesion

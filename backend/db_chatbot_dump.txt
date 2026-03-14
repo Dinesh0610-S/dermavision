@@ -1,0 +1,7 @@
+--- CHATBOT CONVOS ---
+ID=2 User=1 Msg='Hello, I have a skin issue....'
+ID=1 User=1 Msg='Hello...'
+
+--- USERS ---
+ID=2 Username='sara' Email='sara@gmail.com'
+ID=1 Username='Guest User' Email='guest@dermavision.ai'

@@ -1,0 +1,266 @@
+{
+    "users": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "username",
+            "type": "varchar(100)"
+        },
+        {
+            "field": "email",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "password_hash",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "diseases": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "disease_name",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "description",
+            "type": "text"
+        }
+    ],
+    "skin_scans": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "image_path",
+            "type": "text"
+        },
+        {
+            "field": "heatmap_path",
+            "type": "text"
+        },
+        {
+            "field": "predicted_disease",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "confidence_score",
+            "type": "float"
+        },
+        {
+            "field": "severity_level",
+            "type": "varchar(50)"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "symptom_logs": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "symptoms",
+            "type": "text"
+        },
+        {
+            "field": "ai_prediction",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "confidence_score",
+            "type": "float"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "healing_timeline": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "disease",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "scan_image",
+            "type": "text"
+        },
+        {
+            "field": "heatmap_image",
+            "type": "text"
+        },
+        {
+            "field": "stage",
+            "type": "varchar(100)"
+        },
+        {
+            "field": "progress_percent",
+            "type": "int"
+        },
+        {
+            "field": "notes",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "smart_mirror_scans": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "image_path",
+            "type": "text"
+        },
+        {
+            "field": "redness_score",
+            "type": "float"
+        },
+        {
+            "field": "hydration_level",
+            "type": "float"
+        },
+        {
+            "field": "pore_score",
+            "type": "float"
+        },
+        {
+            "field": "acne_score",
+            "type": "float"
+        },
+        {
+            "field": "analysis_summary",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "chatbot_conversations": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_message",
+            "type": "text"
+        },
+        {
+            "field": "bot_response",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "nutrition_recommendations": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "disease_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "food_name",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "category",
+            "type": "varchar(50)"
+        },
+        {
+            "field": "benefit",
+            "type": "text"
+        }
+    ],
+    "treatments": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "disease_id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "treatment_name",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "description",
+            "type": "text"
+        },
+        {
+            "field": "duration_days",
+            "type": "int"
+        }
+    ],
+    "ai_logs": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "image_path",
+            "type": "text"
+        },
+        {
+            "field": "predicted_class",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "confidence",
+            "type": "float"
+        },
+        {
+            "field": "true_label",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ]
+}

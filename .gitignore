@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js
+/.next/
+/out/
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Env
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+*.keras
+
+# Backend specific
+backend/static/uploads/*
+!backend/static/uploads/.gitkeep
+backend/db_counts.txt
+backend/api_chat_test.py
+backend/api_predict_test.py
+backend/verify_healing.py
+backend/api_compare_test.py
+backend/db_test_insert.py
+backend/db_test_scan.py
+
+# Gemini / Antigravity artifacts (if applicable in project root)
+.gemini/
+brain/
+
+# Dataset
+dataset/
+dataset/archive/

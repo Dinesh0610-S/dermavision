@@ -1,0 +1,96 @@
+{
+    "users": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "username",
+            "type": "varchar(100)"
+        },
+        {
+            "field": "email",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "password_hash",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "skin_scans": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "int"
+        },
+        {
+            "field": "image_path",
+            "type": "text"
+        },
+        {
+            "field": "heatmap_path",
+            "type": "text"
+        },
+        {
+            "field": "predicted_disease",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "confidence_score",
+            "type": "float"
+        },
+        {
+            "field": "severity_level",
+            "type": "varchar(50)"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ],
+    "healing_timeline": [
+        {
+            "field": "id",
+            "type": "bigint unsigned"
+        },
+        {
+            "field": "user_id",
+            "type": "int"
+        },
+        {
+            "field": "disease",
+            "type": "varchar(150)"
+        },
+        {
+            "field": "scan_image",
+            "type": "text"
+        },
+        {
+            "field": "heatmap_image",
+            "type": "text"
+        },
+        {
+            "field": "stage",
+            "type": "varchar(100)"
+        },
+        {
+            "field": "progress_percent",
+            "type": "int"
+        },
+        {
+            "field": "notes",
+            "type": "text"
+        },
+        {
+            "field": "created_at",
+            "type": "timestamp"
+        }
+    ]
+}

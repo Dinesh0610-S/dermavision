@@ -1,0 +1,338 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  /* DermaVision Medical Theme */
+  --background: #EAF4FF;
+  --foreground: #1F2937;
+  --card: #FFFFFF;
+  --card-foreground: #1F2937;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2937;
+  
+  --primary: #2A7FFF;
+  --primary-foreground: #FFFFFF;
+  
+  --secondary: #1EC8A5;
+  --secondary-foreground: #FFFFFF;
+  
+  --muted: #E6F7FF;
+  --muted-foreground: #6B7280;
+  
+  --accent: #6FB6FF;
+  --accent-foreground: #FFFFFF;
+  
+  --destructive: #FF3D57;
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #D1E5F9;
+  --input: #F0F7FF;
+  --ring: #2A7FFF;
+  
+  --chart-1: #2A7FFF;
+  --chart-2: #1EC8A5;
+  --chart-3: #4CAF90;
+  --chart-4: #FFB74D;
+  --chart-5: #FF7043;
+  
+  --radius: 1rem; /* 16px */
+  
+  --sidebar: #F0F7FF;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #2A7FFF;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EAF4FF;
+  --sidebar-accent-foreground: #1F2937;
+  --sidebar-border: #D1E5F9;
+  --sidebar-ring: #2A7FFF;
+}
+
+.dark {
+  /* No dark mode enabled for the primary clean medical theme, but kept for fallback structure */
+  --background: #0B0E14;
+  --foreground: oklch(0.95 0.01 280);
+  --card: oklch(0.12 0.02 280);
+  --card-foreground: oklch(0.95 0.01 280);
+  --popover: #0B0E14;
+  --popover-foreground: oklch(0.95 0.01 280);
+  --primary: oklch(0.85 0.2 195);
+  --primary-foreground: oklch(0.10 0.02 280);
+  --secondary: oklch(0.55 0.25 290);
+  --secondary-foreground: oklch(0.95 0.01 280);
+  --muted: oklch(0.18 0.02 280);
+  --muted-foreground: oklch(0.65 0.02 280);
+  --accent: oklch(0.75 0.2 160);
+  --accent-foreground: oklch(0.10 0.02 280);
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.95 0.01 280);
+  --border: oklch(0.25 0.04 280);
+  --input: oklch(0.18 0.03 280);
+  --ring: oklch(0.85 0.2 195);
+  --chart-1: oklch(0.85 0.2 195);
+  --chart-2: oklch(0.55 0.25 290);
+  --chart-3: oklch(0.75 0.2 160);
+  --chart-4: oklch(0.70 0.18 130);
+  --chart-5: oklch(0.80 0.15 200);
+  --sidebar: oklch(0.10 0.02 280);
+  --sidebar-foreground: oklch(0.95 0.01 280);
+  --sidebar-primary: oklch(0.85 0.2 195);
+  --sidebar-primary-foreground: oklch(0.10 0.02 280);
+  --sidebar-accent: oklch(0.18 0.02 280);
+  --sidebar-accent-foreground: oklch(0.95 0.01 280);
+  --sidebar-border: oklch(0.25 0.04 280);
+  --sidebar-ring: oklch(0.85 0.2 195);
+}
+
+@theme inline {
+  --font-sans: 'Inter', 'Roboto', 'Source Sans Pro', sans-serif;
+  --font-mono: 'Geist Mono', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Custom DermaVision Colors */
+  --color-primary-blue: #2A7FFF;
+  --color-soft-blue: #6FB6FF;
+  --color-medical-teal: #1EC8A5;
+  --color-healing-green: #4CAF90;
+  --color-soft-cyan: #E6F7FF;
+  --color-soft-mint: #F2FBF7;
+  --color-soft-teal: #E6F7F2;
+  --color-healthy: #4CAF90;
+  --color-warning: #FFB74D;
+  --color-attention: #FF7043;
+  --color-deep-bg: #0F172A; /* Used primarily for navbar */
+  /* Fallbacks for older references */
+  --color-cyan: var(--color-medical-teal);
+  --color-purple: var(--color-primary-blue);
+  --color-green: var(--color-healthy);
+  --color-medical: var(--color-medical-teal);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+    background: linear-gradient(135deg, #F2FBF7, #E6F7F2); /* Soft Mint to Soft Teal */
+    background-attachment: fixed;
+  }
+}
+
+/* Custom Healthcare Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { 
+    box-shadow: 0 0 10px rgba(30, 200, 165, 0.1), 0 0 20px rgba(30, 200, 165, 0.05);
+  }
+  50% { 
+    box-shadow: 0 0 20px rgba(30, 200, 165, 0.2), 0 0 40px rgba(30, 200, 165, 0.1);
+  }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+@keyframes gentle-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes spin-slow-reverse {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes float-particle {
+  0%, 100% { 
+    transform: translateY(0) translateX(0);
+    opacity: 0.3;
+  }
+  50% { 
+    transform: translateY(-20px) translateX(20px); /* Gentler float */
+    opacity: 0.6;
+  }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* We retain class names for backward compatibility with existing code where plausible */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+.animate-scan-line {
+  animation: scan-line 2s linear infinite;
+}
+
+.animate-neural-pulse {
+  animation: gentle-pulse 3s ease-in-out infinite;
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 30s linear infinite; /* Slower */
+}
+
+.animate-spin-slow {
+  animation: spin-slow 30s linear infinite; /* Slower */
+}
+
+.animate-spin-slow-reverse {
+  animation: spin-slow-reverse 20s linear infinite; /* Slower */
+}
+
+.animate-float-particle {
+  animation: float-particle 8s ease-in-out infinite;
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 12s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* Medical Clean Glassmorphism */
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(42, 127, 255, 0.1);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(230, 247, 242, 0.8); /* Soft teal border */
+  box-shadow: 0 4px 16px rgba(30, 200, 165, 0.05); /* Soft medical teal shadow */
+  border-radius: 16px;
+}
+
+/* Glow Effects */
+.glow-cyan {
+  box-shadow: 0 0 15px rgba(30, 200, 165, 0.15), 0 0 30px rgba(30, 200, 165, 0.05);
+}
+
+.glow-purple {
+  box-shadow: 0 0 15px rgba(42, 127, 255, 0.15), 0 0 30px rgba(42, 127, 255, 0.05);
+}
+
+.glow-green {
+  box-shadow: 0 0 15px rgba(76, 175, 144, 0.15), 0 0 30px rgba(76, 175, 144, 0.05);
+}
+
+.text-glow-cyan {
+  text-shadow: 0 0 10px rgba(30, 200, 165, 0.3);
+}
+
+.text-glow-green {
+  text-shadow: 0 0 10px rgba(76, 175, 144, 0.3);
+}
+
+/* Grid Pattern (Subtler) */
+.grid-pattern {
+  background-image: 
+    linear-gradient(rgba(42, 127, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(42, 127, 255, 0.02) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+/* Clean Holographic Effect */
+.holographic {
+  background: linear-gradient(
+    135deg,
+    rgba(242, 251, 247, 0.8) 0%, /* Soft Mint */
+    rgba(230, 247, 242, 0.8) 50%, /* Soft Teal */
+    rgba(242, 251, 247, 0.8) 100%
+  );
+  background-size: 400% 400%;
+  animation: gradient-shift 12s ease infinite;
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 3D Utilities */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+
+.transform-translate-z-10 {
+  transform: translateZ(10px);
+}
+
+.transform-translate-z-20 {
+  transform: translateZ(20px);
+}
+
+.transform-translate-z-30 {
+  transform: translateZ(30px);
+}
