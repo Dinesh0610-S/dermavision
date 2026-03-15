@@ -65,13 +65,13 @@ def resnet50_preprocess(x):
 try:
     model_path = os.path.join(BASE_DIR, "best_skin_model.keras")
     print(f"🧠 Loading AI Skin Model from {model_path}...")
+    
+    # In TensorFlow 2.16+, custom_objects are handled slightly differently for .keras (Keras 3)
     model = tf.keras.models.load_model(
         model_path,
         custom_objects={
-            "tf": tf,
             "resnet50_preprocess": resnet50_preprocess 
-        },
-        safe_mode=False
+        }
     )
     print("✅ Model Loaded Successfully")
 except Exception as e:
