@@ -103,8 +103,171 @@ function SeverityIndicator({ severity }: { severity: string }) {
 export function ResultsDashboard() {
   const [activeTab, setActiveTab] = useState<"overview" | "details" | "recommendations">("overview")
 
+  const handleDownload = () => {
+    window.print();
+  };
+
   return (
-    <section id="results" className="relative py-20 lg:py-32">
+    <>
+      <style jsx global>{`
+        /* Screen-only utility to hide report from web view */
+        @media screen {
+          .print-only-report { display: none !important; }
+        }
+
+        @media print {
+          /* 200% LOCK: Total Layout Reset */
+          @page {
+            margin: 0 !important;
+            size: portrait;
+          }
+
+          /* Reset ALL ancestors to prevent ghost heights/margins */
+          html, body, #__next, main {
+            background: white !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            height: 100% !important;
+            max-height: 100% !important;
+            overflow: hidden !important;
+            position: relative !important;
+            -webkit-print-color-adjust: exact;
+          }
+
+          /* FORCE HIDE all web-only elements - INCLUDING PRELOADER & 3D CANVAS */
+          .no-print,
+          .preloader-container,
+          #navbar, #hero, #analysis, #education, #results, #scan,
+          header, footer, nav, aside,
+          canvas, [class*="canvas"], [class*="Canvas"],
+          .HeroVisual, [class*="ConfidenceRing"], [class*="Visualization"],
+          [class*="Stats"], [class*="Orb"], [class*="ParticleSystem"] {
+            display: none !important;
+            height: 0 !important;
+            width: 0 !important;
+            visibility: hidden !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+          }
+
+          /* Viewport-Locked Clinical Report */
+          #clinical-pdf-root {
+            display: block !important;
+            visibility: visible !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 98vh !important;
+            background: white !important;
+            color: black !important;
+            padding: 10mm 15mm !important;
+            margin: 0 !important;
+            z-index: 9999999 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+          }
+
+          /* Restore content visibility inside report */
+          #clinical-pdf-root * {
+            color: black !important;
+            visibility: visible !important;
+            background-color: transparent !important;
+          }
+
+          /* Layout preservation */
+          #clinical-pdf-root .report-grid { display: grid !important; }
+          #clinical-pdf-root .text-brand { color: #1EC8A5 !important; }
+        }
+      `}</style>
+
+      {/* Print Only Medical Report - Viewport Anchored Wrapper */}
+      <div id="clinical-pdf-root" className="print-only-report">
+        {/* Header - Restored High-Quality Style */}
+        <div style={{ padding: '0 0 10px 0', borderBottom: '3px solid #1EC8A5', marginBottom: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', width: '100%' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#1F2937', margin: 0 }}>DermaVision AI</h1>
+            <p className="text-brand" style={{ fontSize: '18px', fontWeight: 'bold', margin: '5px 0 0 0' }}>Clinical Diagnostic Report</p>
+            <p style={{ fontSize: '14px', color: '#1F2937', marginTop: '8px', borderLeft: '3px solid #1EC8A5', paddingLeft: '10px' }}>
+              <strong>Patient Care:</strong> {typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('derma_active_user') || '{}').name || 'John Doe') : 'John Doe'}
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>Date: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            <p style={{ fontSize: '12px', color: '#6B7280', margin: 0 }}>Report ID: DV-{Math.floor(Math.random() * 1000000)}</p>
+          </div>
+        </div>
+
+        {/* Diagnosis Results */}
+        <div style={{ marginBottom: '20px', display: 'block', width: '100%' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1F2937', marginBottom: '12px', backgroundColor: '#F8FCFA', padding: '8px 15px', borderRadius: '8px', borderLeft: '5px solid #1EC8A5', width: '100%' }}>
+            Primary Analysis Results
+          </h2>
+          <div className="report-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '15px', width: '100%' }}>
+            <div style={{ padding: '12px', border: '1px solid #B2DFDB', borderRadius: '12px', background: '#F8FCFA' }}>
+              <p style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px', fontWeight: 'bold' }}>Detected Condition</p>
+              <p className="text-brand" style={{ fontSize: '18px', fontWeight: 'bold' }}>{analysisResults.condition}</p>
+            </div>
+            <div style={{ padding: '12px', border: '1px solid #B2DFDB', borderRadius: '12px', background: '#F8FCFA' }}>
+              <p style={{ fontSize: '11px', color: '#6B7280', marginBottom: '4px', fontWeight: 'bold' }}>AI Confidence Score</p>
+              <p style={{ fontSize: '18px', fontWeight: 'bold', color: '#4CAF90' }}>{analysisResults.confidence}%</p>
+            </div>
+          </div>
+          
+          <div style={{ background: '#F9FAFB', padding: '15px', borderRadius: '12px', border: '1px solid #E5E7EB', width: '100%', display: 'block' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>Condition Overview</h3>
+            <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#4B5563', margin: 0 }}>
+              Seborrheic keratosis is a common benign skin growth. It typically appears as a waxy, scaly, slightly elevated growth on the face, chest, shoulders or back. These are non-cancerous and not contagious. 
+            </p>
+          </div>
+        </div>
+
+        {/* Consolidated Care Protocol */}
+        <div style={{ display: 'block', width: '100%' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: 'bold', color: '#1F2937', marginBottom: '12px', backgroundColor: '#F8FCFA', padding: '8px 15px', borderRadius: '8px', borderLeft: '5px solid #1EC8A5', width: '100%' }}>
+            Nutrition & Care Protocol
+          </h2>
+          
+          <div className="report-grid" style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', width: '100%' }}>
+            {/* Care Steps */}
+            <div>
+              <p className="text-brand" style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '13px' }}>Recommended Care:</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {analysisResults.recommendations.map((rec, index) => (
+                  <div key={index} style={{ fontSize: '12px', color: '#374151', display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                    <span className="text-brand" style={{ fontWeight: 'bold' }}>✓</span>
+                    <span>{rec}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Nutrition Guidelines */}
+            <div style={{ padding: '12px', background: '#E6F7F2', borderRadius: '10px', border: '1px solid #B2DFDB' }}>
+              <p className="text-brand" style={{ fontWeight: 'bold', marginBottom: '6px', fontSize: '13px' }}>Nutrition Focus</p>
+              <ul style={{ margin: 0, paddingLeft: '15px', fontSize: '11px', color: '#374151', lineHeight: '1.5' }}>
+                <li>Antioxidant-rich whole foods</li>
+                <li>Omega-3 fatty acids</li>
+                <li>Vitamin E rich sources</li>
+                <li>Hydrating fruits and vegetables</li>
+              </ul>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '15px', padding: '12px', background: '#FFFBEB', borderRadius: '10px', border: '1px solid #FDE68A', width: '100%' }}>
+            <p style={{ fontSize: '10px', color: '#92400E', lineHeight: '1.4', margin: 0 }}>
+              <strong>Disclaimer:</strong> This automated report is for informational purposes. If you notice rapid changes in lesion appearance, please consult a dermatologist immediately.
+            </p>
+          </div>
+
+          <div style={{ marginTop: '20px', textAlign: 'center', borderTop: '1px solid #E5E7EB', paddingTop: '10px', width: '100%' }}>
+            <p style={{ fontSize: '10px', color: '#9CA3AF', margin: 0 }}>DermaVision AI Pathological Analysis | www.dermavision.ai</p>
+          </div>
+        </div>
+      </div>
+
+      <section id="results" className="relative py-20 lg:py-32 no-print">
+
       <div className="absolute inset-0 bg-[#F2FBF7]" />
       
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
@@ -255,15 +418,13 @@ export function ResultsDashboard() {
                 </div>
               )}
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-[#B2DFDB] mt-6">
-                <Button className="flex-1 bg-[#1EC8A5] hover:bg-[#17A589] text-white shadow-md font-semibold">
+              <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-[#B2DFDB] mt-6 no-print">
+                <Button 
+                  onClick={handleDownload}
+                  className="flex-1 bg-[#1EC8A5] hover:bg-[#17A589] text-white shadow-md font-semibold"
+                >
                   <FileText className="w-4 h-4 mr-2" />
                   Download Report
-                </Button>
-                <Button variant="outline" className="flex-1 border-[#1EC8A5] text-[#1EC8A5] hover:bg-[#E6F7F2]">
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share Results
                 </Button>
               </div>
             </div>
@@ -300,19 +461,10 @@ export function ResultsDashboard() {
               </div>
             </div>
 
-            {/* Consult CTA */}
-            <div className="bg-gradient-to-br from-[#1EC8A5] to-[#4CAF90] rounded-2xl p-6 shadow-lg text-white">
-              <h4 className="text-lg font-bold mb-2">Need Expert Advice?</h4>
-              <p className="text-sm text-white/90 mb-4 font-medium">
-                Connect with certified dermatologists for professional consultation.
-              </p>
-              <Button className="w-full bg-white text-[#1EC8A5] hover:bg-[#E6F7F2] font-bold shadow-sm">
-                Book Consultation
-              </Button>
-            </div>
           </div>
         </div>
       </div>
     </section>
+    </>
   )
 }

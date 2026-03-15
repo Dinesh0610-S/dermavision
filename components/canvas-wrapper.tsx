@@ -5,7 +5,6 @@ import { Preload } from "@react-three/drei"
 import { EffectComposer, Bloom, DepthOfField } from "@react-three/postprocessing"
 import { Suspense, useState, useEffect } from "react"
 import { Preloader } from "./preloader"
-import { ParticleSystem } from "./three/particle-system"
 
 // We use this wrapper to conditionally render the Canvas only on the client
 // and handle the Preloader transition
@@ -36,7 +35,6 @@ export function CanvasWrapper({ children }: { children: React.ReactNode }) {
           <ambientLight intensity={0.5} />
           
           <Suspense fallback={null}>
-            <ParticleSystem count={1500} />
             <Preload all />
             
             {/* Cinematic Post-Processing */}

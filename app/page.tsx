@@ -8,7 +8,6 @@ import { ResultsDashboard } from "@/components/results-dashboard"
 import { EducationSection } from "@/components/education-section"
 
 import { AIAssistantOrb } from "@/components/ai-assistant-orb"
-import { ParticleField } from "@/components/particle-field"
 
 function LoadingFallback() {
   return (
@@ -35,29 +34,32 @@ function LoadingFallback() {
 export default function HomePage() {
   return (
     <main className="relative min-h-screen overflow-x-hidden">
-      {/* Background Particle Field */}
-      <Suspense fallback={null}>
-        <ParticleField />
-      </Suspense>
 
-      {/* Navigation */}
-      <Navbar />
+      <div className="no-print">
+        <Navbar />
+      </div>
 
-      {/* Page Sections */}
       <Suspense fallback={<LoadingFallback />}>
-        <HeroSection />
-        <AIScanSection />
+        <div className="no-print">
+          <HeroSection />
+          <AIScanSection />
+        </div>
+        
         <ResultsDashboard />
-        <EducationSection />
-
+        
+        <div className="no-print">
+          <EducationSection />
+        </div>
       </Suspense>
 
       {/* AI Assistant Orb */}
-      <AIAssistantOrb />
+      <div className="no-print">
+        <AIAssistantOrb />
+      </div>
 
       {/* Gradient overlays for depth */}
-      <div className="fixed top-0 left-0 right-0 h-40 bg-gradient-to-b from-[#EAF4FF] to-transparent pointer-events-none z-40" />
-      <div className="fixed bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#F0F7FF] to-transparent pointer-events-none z-0" />
+      <div className="fixed top-0 left-0 right-0 h-40 bg-gradient-to-b from-[#EAF4FF] to-transparent pointer-events-none z-40 no-print" />
+      <div className="fixed bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-[#F0F7FF] to-transparent pointer-events-none z-0 no-print" />
     </main>
   )
 }

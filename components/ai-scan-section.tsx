@@ -506,10 +506,106 @@ export function AIScanSection() {
                       Scan Another
                     </Button>
                     <Button
-                      asChild
-                      className="flex-1 bg-[#1EC8A5] text-white font-semibold hover:bg-[#17A589] shadow-md transition-colors"
+                      onClick={() => {
+                        if (!detectedDisease) return
+
+                        // Get patient name from localStorage
+                        let patientName = "Patient"
+                        try {
+                          const user = JSON.parse(localStorage.getItem("derma_active_user") || "{}")
+                          if (user.name) patientName = user.name
+                        } catch (e) {}
+
+                        const date = new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })
+                        const reportId = `DV-${Math.floor(Math.random() * 1000000)}`
+                        const severityColor = detectedDisease.risk === "High" ? "#EF5350" : detectedDisease.risk === "Moderate" ? "#FFB74D" : "#4CAF90"
+
+                        const html = `<!DOCTYPE html>
+<html><head><meta charset="utf-8"/>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;}
+  @page{size:A4 portrait;margin:15mm;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#1F2937;background:white;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .header{display:flex;justify-content:space-between;align-items:flex-end;padding-bottom:12px;border-bottom:3px solid #1EC8A5;margin-bottom:20px;}
+  h1{font-size:32px;font-weight:800;color:#1F2937;line-height:1;}
+  .subtitle{font-size:16px;font-weight:700;color:#1EC8A5;margin-top:6px;}
+  .patient-row{font-size:13px;color:#1F2937;margin-top:10px;border-left:3px solid #1EC8A5;padding-left:10px;}
+  .header-right{text-align:right;font-size:11px;color:#6B7280;line-height:1.8;}
+  .section-title{font-size:16px;font-weight:700;color:#1F2937;background:#F8FCFA;padding:8px 14px;border-radius:8px;border-left:5px solid #1EC8A5;margin-bottom:12px;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+  .card{padding:12px;border:1.5px solid #B2DFDB;border-radius:10px;background:#F8FCFA;}
+  .card .label{font-size:10px;color:#6B7280;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+  .overview{background:#F9FAFB;padding:12px;border-radius:8px;border:1px solid #E5E7EB;margin-bottom:18px;}
+  .overview h3{font-size:13px;font-weight:700;margin-bottom:6px;}
+  .overview p{font-size:12px;line-height:1.6;color:#4B5563;}
+  .care-section{margin-bottom:12px;}
+  .care-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;}
+  .care-label{font-size:12px;font-weight:700;color:#1EC8A5;margin-bottom:7px;}
+  .care-item{display:flex;gap:6px;font-size:11px;color:#374151;margin-bottom:5px;}
+  .check{color:#1EC8A5;font-weight:700;}
+  .nutrition{background:#E6F7F2;border:1.5px solid #B2DFDB;border-radius:8px;padding:12px;}
+  .nutrition ul{list-style:none;font-size:11px;color:#374151;line-height:1.8;}
+  .nutrition ul li::before{content:"• ";color:#1EC8A5;}
+  .disclaimer{background:#FFFBEB;border:1px solid #FDE68A;border-radius:6px;padding:10px 12px;font-size:9px;color:#92400E;line-height:1.5;margin-top:12px;}
+  .footer{text-align:center;border-top:1px solid #E5E7EB;padding-top:8px;margin-top:14px;font-size:9px;color:#9CA3AF;}
+</style></head><body>
+<div class="header">
+  <div>
+    <h1>DermaVision AI</h1>
+    <div class="subtitle">Clinical Diagnostic Report</div>
+    <div class="patient-row"><strong>Patient Care:</strong> ${patientName}</div>
+  </div>
+  <div class="header-right">
+    <div>Date: ${date}</div>
+    <div>Report ID: ${reportId}</div>
+  </div>
+</div>
+<div class="section-title">Primary Analysis Results</div>
+<div class="grid2">
+  <div class="card"><div class="label">Detected Condition</div><div style="font-size:18px;font-weight:800;color:#1EC8A5;">${detectedDisease.name}</div></div>
+  <div class="card"><div class="label">AI Confidence Score</div><div style="font-size:18px;font-weight:800;color:#1F2937;">${detectedDisease.confidence}%</div></div>
+</div>
+<div class="grid2">
+  <div class="card"><div class="label">Severity Level</div><div style="font-size:14px;font-weight:700;color:${severityColor};">${detectedDisease.risk}</div></div>
+  <div class="card"><div class="label">Recommended Action</div><div style="font-size:13px;font-weight:700;color:#1F2937;">${detectedDisease.treatability}</div></div>
+</div>
+<div class="overview"><h3>Condition Overview</h3><p>${detectedDisease.name} is a commonly diagnosed skin condition identified by our AI. Accurate diagnosis requires reviewing clinical history and potentially consulting a certified dermatologist for confirmation and personalized treatment.</p></div>
+<div class="care-section">
+<div class="section-title">Nutrition &amp; Care Protocol</div>
+<div class="care-grid">
+  <div>
+    <div class="care-label">Recommended Care:</div>
+    <div class="care-item"><span class="check">✓</span> Monitor for changes in size or color</div>
+    <div class="care-item"><span class="check">✓</span> Avoid scratching or picking at the lesion</div>
+    <div class="care-item"><span class="check">✓</span> Use a gentle moisturizer daily</div>
+    <div class="care-item"><span class="check">✓</span> Schedule a routine dermatological exam</div>
+  </div>
+  <div class="nutrition">
+    <div class="care-label">Nutrition Focus</div>
+    <ul><li>Antioxidant-rich whole foods</li><li>Omega-3 fatty acids</li><li>Vitamin E rich sources</li><li>Hydrating fruits and vegetables</li></ul>
+  </div>
+</div>
+</div>
+<div class="disclaimer"><strong>Disclaimer:</strong> This automated report is for informational purposes only and does not constitute medical diagnosis. If you notice rapid changes in lesion appearance, consult a certified dermatologist immediately.</div>
+<div class="footer">DermaVision AI Pathological Analysis | www.dermavision.ai</div>
+</body></html>`
+
+                        // Create a hidden iframe, write the report HTML, and print it
+                        const iframe = document.createElement("iframe")
+                        iframe.style.cssText = "position:fixed;top:0;left:0;width:0;height:0;border:none;visibility:hidden;"
+                        document.body.appendChild(iframe)
+                        iframe.contentDocument!.open()
+                        iframe.contentDocument!.write(html)
+                        iframe.contentDocument!.close()
+                        iframe.contentWindow!.focus()
+                        setTimeout(() => {
+                          iframe.contentWindow!.print()
+                          setTimeout(() => document.body.removeChild(iframe), 30000)
+                        }, 500)
+                      }}
+                      className="flex-1 bg-[#1EC8A5] text-white font-semibold hover:bg-[#17A589] shadow-md transition-colors flex items-center justify-center gap-2"
                     >
-                      <a href="#results">View Results</a>
+                      📄 Download Report
                     </Button>
                   </div>
                 )}

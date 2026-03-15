@@ -336,3 +336,9 @@
 .transform-translate-z-30 {
   transform: translateZ(30px);
 }
+/* Print Utilities */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

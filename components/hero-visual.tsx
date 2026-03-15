@@ -90,22 +90,6 @@ export function HeroVisual() {
         </div>
       </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {Array.from({ length: 20 }).map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-[#00F2FF] rounded-full animate-float-particle"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${3 + Math.random() * 4}s`,
-              opacity: 0.3 + Math.random() * 0.4,
-            }}
-          />
-        ))}
-      </div>
 
       {/* Scan lines effect */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-20">

@@ -11,7 +11,8 @@ const timelineData = [
 ]
 
 export function HealingTimeline() {
-  const [selectedDay, setSelectedDay] = useState(timelineData[timelineData.length - 1])
+  const [timelineState, setTimelineState] = useState(timelineData)
+  const [selectedDay, setSelectedDay] = useState(timelineState[timelineState.length - 1])
   const container = useRef<HTMLDivElement>(null)
 
   const [day1File, setDay1File] = useState<File | null>(null)
@@ -74,6 +75,10 @@ export function HealingTimeline() {
         const data = await response.json()
         if (data.success) {
           setResult(data)
+          // Update timeline state dynamically
+          setTimelineState(prev => prev.map(pt => 
+            pt.day === 30 ? { ...pt, change: data.healing_percentage, notes: data.clinical_note } : pt
+          ))
         }
       } catch (err) {
         console.error(err)
@@ -87,7 +92,11 @@ export function HealingTimeline() {
 
   const displayChange = result ? result.healing_percentage : selectedDay.change
   const displayNotes = result ? result.clinical_note : selectedDay.notes
-  const displayDayLabel = selectedDay.day === 30 ? "Current Day" : `Day ${selectedDay.day}`
+  
+  // Dynamic labels for comparison
+  const day1Label = "Day 1 Baseline"
+  const currentLabel = result ? (result.healing_percentage > 0 ? "Improving Stage" : "Current Checkup") : "Target Day"
+  const displayDayLabel = selectedDay.day === 30 ? "Current" : `Day ${selectedDay.day}`
 
   return (
     <div className="w-full max-w-5xl mx-auto" ref={container}>
@@ -107,7 +116,7 @@ export function HealingTimeline() {
           <div className="timeline-line absolute top-0 bottom-0 left-[23px] w-[1px] bg-[#1EC8A5]" />
           
           <div className="space-y-12 relative py-4">
-            {timelineData.map((point) => (
+            {timelineState.map((point) => (
               <div 
                 key={point.day}
                 onClick={() => setSelectedDay(point)}
@@ -123,12 +132,14 @@ export function HealingTimeline() {
                 <div className="pt-2">
                   <h4 className="font-bold text-[#111827] text-sm">{point.title}</h4>
                   <div className="flex items-center mt-1">
-                    {point.change > 0 ? (
+                    {(point.day === 1) ? (
+                      <span className="text-[13px] text-[#6B7280] font-medium">Baseline Scan</span>
+                    ) : (result || point.change > 0) ? (
                       <span className="text-[13px] text-[#1EC8A5] font-bold flex gap-1 items-center">
-                        <TrendingUp className="w-3.5 h-3.5" /> +{point.change}% improved
+                        <TrendingUp className="w-3.5 h-3.5" /> +{point.day === 30 ? (result?.healing_percentage ?? point.change) : point.change}% improved
                       </span>
                     ) : (
-                      <span className="text-[13px] text-[#6B7280] font-medium">Baseline Scan</span>
+                      <span className="text-[13px] text-[#6B7280] font-medium">Awaiting Analysis...</span>
                     )}
                   </div>
                 </div>
@@ -154,8 +165,8 @@ export function HealingTimeline() {
             </div>
             
             <div className="flex justify-between px-10 mb-3">
-               <span className="text-xs text-[#6B7280] font-bold uppercase tracking-widest">Day 1 Baseline</span>
-               <span className="text-xs text-[#1EC8A5] font-bold uppercase tracking-widest absolute right-[23.5%] md:static md:right-auto">{displayDayLabel}</span>
+               <span className="text-xs text-[#6B7280] font-bold uppercase tracking-widest">{day1Label}</span>
+               <span className="text-xs text-[#1EC8A5] font-bold uppercase tracking-widest absolute right-[23.5%] md:static md:right-auto">{displayDayLabel === "Current" ? "Current Day" : displayDayLabel}</span>
             </div>
             
             <div className="grid grid-cols-2 gap-4 mb-10 relative items-center">
@@ -197,7 +208,6 @@ export function HealingTimeline() {
               </div>
             )}
 
-            {/* Regeneration Progress Bar */}
             <div className="mb-6 space-y-2.5">
               <div className="flex justify-between items-end">
                 <span className="text-[13.5px] text-[#374151] font-bold tracking-tight">Healing Velocity</span>
@@ -205,8 +215,8 @@ export function HealingTimeline() {
               </div>
               <div className="h-[8px] w-full bg-[#E5E7EB] rounded-full overflow-hidden">
                 <div 
-                  className="regeneration-bar h-full bg-[#1EC8A5] rounded-full"
-                  style={{ width: "0%" }}
+                  className="regeneration-bar h-full bg-[#1EC8A5] rounded-full transition-all duration-700 ease-out"
+                  style={{ width: `${displayChange}%` }}
                 />
               </div>
             </div>
