@@ -5,13 +5,17 @@ import numpy as np
 import tensorflow as tf
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
 from tensorflow.keras.preprocessing import image
 import json
 from datetime import datetime
 from groq import Groq
+from pymongo import MongoClient
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 # -------------------------------
 # FLASK APP CONFIG
@@ -20,21 +24,25 @@ from groq import Groq
 app = Flask(__name__)
 # Enable CORS for Next.js frontend running on localhost:3000
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
-app.secret_key = "derma_vision_final_stable_key"
+app.secret_key = os.environ.get("SECRET_KEY", "derma_vision_final_stable_key")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "static", "uploads")
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
-# Connect to user provided MySQL dermavision schema
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+mysqlconnector://root:root@127.0.0.1:3306/dermavision'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-db = SQLAlchemy(app)
+# -------------------------------
+# MONGODB CONFIG
+# -------------------------------
+MONGO_URI = os.environ.get("MONGODB_URI")
+client = MongoClient(MONGO_URI)
+db = client.get_database("dermavision")
 bcrypt = Bcrypt(app)
 
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 try:
-    groq_client = Groq(api_key=GROQ_API_KEY)
+    groq_client = Groq(api_key=GROQ_API_KEY) if GROQ_API_KEY else None
 except Exception as e:
     print(f"Failed to initialize Groq client: {e}")
     groq_client = None
@@ -43,96 +51,8 @@ except Exception as e:
 # DATABASE MODELS (ALL 10 TABLES)
 # -------------------------------
 
-class User(db.Model):
-    __tablename__ = "users"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    username = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(150), unique=True, nullable=False)
-    password_hash = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class Disease(db.Model):
-    __tablename__ = "diseases"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    disease_name = db.Column(db.String(150), unique=True, nullable=False)
-    description = db.Column(db.Text)
-
-class SkinScan(db.Model):
-    __tablename__ = "skin_scans"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id', ondelete='CASCADE'))
-    image_path = db.Column(db.Text, nullable=False)
-    heatmap_path = db.Column(db.Text)
-    predicted_disease = db.Column(db.String(150))
-    confidence_score = db.Column(db.Float)
-    severity_level = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class SymptomLog(db.Model):
-    __tablename__ = "symptom_logs"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id', ondelete='CASCADE'))
-    symptoms = db.Column(db.Text)
-    ai_prediction = db.Column(db.String(150))
-    confidence_score = db.Column(db.Float)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class HealingTimeline(db.Model):
-    __tablename__ = "healing_timeline"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id', ondelete='CASCADE'))
-    disease = db.Column(db.String(150))
-    scan_image = db.Column(db.Text)
-    heatmap_image = db.Column(db.Text)
-    stage = db.Column(db.String(100))
-    progress_percent = db.Column(db.Integer)
-    notes = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class SmartMirrorScan(db.Model):
-    __tablename__ = "smart_mirror_scans"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id', ondelete='CASCADE'))
-    image_path = db.Column(db.Text)
-    redness_score = db.Column(db.Float)
-    hydration_level = db.Column(db.Float)
-    pore_score = db.Column(db.Float)
-    acne_score = db.Column(db.Float)
-    analysis_summary = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class ChatbotConversation(db.Model):
-    __tablename__ = "chatbot_conversations"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    user_id = db.Column(db.BigInteger, db.ForeignKey('users.id', ondelete='CASCADE'))
-    user_message = db.Column(db.Text)
-    bot_response = db.Column(db.Text)
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-
-class NutritionRecommendation(db.Model):
-    __tablename__ = "nutrition_recommendations"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    disease_id = db.Column(db.BigInteger, db.ForeignKey('diseases.id', ondelete='CASCADE'))
-    food_name = db.Column(db.String(150))
-    category = db.Column(db.String(50))
-    benefit = db.Column(db.Text)
-
-class Treatment(db.Model):
-    __tablename__ = "treatments"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    disease_id = db.Column(db.BigInteger, db.ForeignKey('diseases.id', ondelete='CASCADE'))
-    treatment_name = db.Column(db.String(150))
-    description = db.Column(db.Text)
-    duration_days = db.Column(db.Integer)
-
-class AILog(db.Model):
-    __tablename__ = "ai_logs"
-    id = db.Column(db.BigInteger, primary_key=True, autoincrement=True)
-    image_path = db.Column(db.Text)
-    predicted_class = db.Column(db.String(150))
-    confidence = db.Column(db.Float)
-    true_label = db.Column(db.String(150))
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+# MongoDB collections are accessed via db.collection_name
+# models are removed as MongoDB is schema-less
 
 
 # -------------------------------
@@ -201,16 +121,22 @@ def register():
     if not username or not email or not password:
         return jsonify({"success": False, "error": "Missing fields"}), 400
 
-    existing_user = User.query.filter_by(email=email).first()
+    existing_user = db.users.find_one({"email": email})
     if existing_user:
         return jsonify({"success": False, "error": "Email already exists"}), 409
 
     hashed_pw = bcrypt.generate_password_hash(password).decode("utf-8")
-    new_user = User(username=username, email=email, password_hash=hashed_pw)
-    db.session.add(new_user)
-    db.session.commit()
+    user_id = db.users.count_documents({}) + 1
+    new_user = {
+        "id": user_id,
+        "username": username,
+        "email": email,
+        "password_hash": hashed_pw,
+        "created_at": datetime.utcnow()
+    }
+    db.users.insert_one(new_user)
 
-    return jsonify({"success": True, "message": "User registered successfully", "user_id": new_user.id}), 201
+    return jsonify({"success": True, "message": "User registered successfully", "user_id": user_id}), 201
 
 @app.route("/login", methods=["POST"])
 def login():
@@ -218,15 +144,15 @@ def login():
     email = data.get("email")
     password = data.get("password")
 
-    user = User.query.filter_by(email=email).first()
-    if user and bcrypt.check_password_hash(user.password_hash, password):
+    user = db.users.find_one({"email": email})
+    if user and bcrypt.check_password_hash(user["password_hash"], password):
         return jsonify({
             "success": True, 
             "message": "Login successful", 
             "user": {
-                "id": user.id,
-                "username": user.username,
-                "email": user.email
+                "id": user["id"],
+                "username": user["username"],
+                "email": user["email"]
             }
         }), 200
 
@@ -282,37 +208,44 @@ def predict():
         except Exception:
             heatmap_filename = filename
 
-        user = User.query.filter_by(email=user_email).first()
-        user_id = user.id if user else 1 
+        user = db.users.find_one({"email": user_email})
+        user_id = user["id"] if user else 1 
         
         try:
-            new_scan = SkinScan(
-                user_id=user_id,
-                image_path=f"/static/uploads/{filename}",
-                heatmap_path=f"/static/uploads/{heatmap_filename}",
-                predicted_disease=result_label,
-                confidence_score=confidence,
-                severity_level=severity
-            )
-            db.session.add(new_scan)
-            db.session.commit()
+            # Insert Scan
+            scan_id = db.skin_scans.count_documents({}) + 1
+            new_scan = {
+                "id": scan_id,
+                "user_id": user_id,
+                "image_path": f"/static/uploads/{filename}",
+                "heatmap_path": f"/static/uploads/{heatmap_filename}",
+                "predicted_disease": result_label,
+                "confidence_score": confidence,
+                "severity_level": severity,
+                "created_at": datetime.utcnow()
+            }
+            db.skin_scans.insert_one(new_scan)
 
             # AI Healing Progression Analysis
             days_elapsed = 0
             initial_confidence = confidence
             
             # Find Day 1 record to measure progress
-            first_scan = SkinScan.query.filter_by(user_id=user_id, predicted_disease=result_label).order_by(SkinScan.created_at.asc()).first()
-            if first_scan and first_scan.id != new_scan.id:
-                delta_days = (datetime.utcnow() - first_scan.created_at).days
+            first_scan = db.skin_scans.find_one(
+                {"user_id": user_id, "predicted_disease": result_label},
+                sort=[("created_at", 1)]
+            )
+            if first_scan and first_scan["id"] != scan_id:
+                delta_days = (datetime.utcnow() - first_scan["created_at"]).days
                 days_elapsed = delta_days if delta_days > 0 else 0
-                initial_confidence = first_scan.confidence_score
+                initial_confidence = first_scan["confidence_score"]
                 
             healing_percentage = 0
             stage = "Initial Scan"
             clinical_note = f"Detected {result_label} with {confidence:.1f}% confidence."
             
             if groq_client:
+                # ... (Groq prompt remains same)
                 prompt = (
                     "You are DermaVision AI, an expert digital dermatologist.\n"
                     "The user is tracking their skin healing journey. Your job is to analyze their progress and return a strict JSON object.\n\n"
@@ -347,69 +280,87 @@ def predict():
                 except Exception as ai_e:
                     print(f"Failed to get AI Healing Progression analysis: {ai_e}")
 
-            new_timeline = HealingTimeline(
-                user_id=user_id,
-                disease=result_label,
-                scan_image=f"/static/uploads/{filename}",
-                heatmap_image=f"/static/uploads/{heatmap_filename}",
-                stage=stage,
-                progress_percent=healing_percentage,
-                notes=clinical_note
-            )
-            db.session.add(new_timeline)
+            timeline_id = db.healing_timeline.count_documents({}) + 1
+            new_timeline = {
+                "id": timeline_id,
+                "user_id": user_id,
+                "disease": result_label,
+                "scan_image": f"/static/uploads/{filename}",
+                "heatmap_image": f"/static/uploads/{heatmap_filename}",
+                "stage": stage,
+                "progress_percent": healing_percentage,
+                "notes": clinical_note,
+                "created_at": datetime.utcnow()
+            }
+            db.healing_timeline.insert_one(new_timeline)
 
             # Ensure the Disease catalog exists
-            disease_entry = Disease.query.filter_by(disease_name=result_label).first()
+            disease_entry = db.diseases.find_one({"disease_name": result_label})
             if not disease_entry:
-                disease_entry = Disease(disease_name=result_label, description=f"Detected clinical case of {result_label}. Routine monitoring advised.")
-                db.session.add(disease_entry)
-                db.session.commit()
+                disease_id = db.diseases.count_documents({}) + 1
+                disease_entry = {
+                    "id": disease_id,
+                    "disease_name": result_label,
+                    "description": f"Detected clinical case of {result_label}. Routine monitoring advised."
+                }
+                db.diseases.insert_one(disease_entry)
                 
                 # Provision Treatment
-                new_treatment = Treatment(
-                    disease_id=disease_entry.id,
-                    treatment_name=f"Standard Clinical Protocol for {result_label}",
-                    description="Consult with a board-certified dermatologist for a personalized and certified medical treatment plan.",
-                    duration_days=14
-                )
-                db.session.add(new_treatment)
+                treatment_id = db.treatments.count_documents({}) + 1
+                new_treatment = {
+                    "id": treatment_id,
+                    "disease_id": disease_id,
+                    "treatment_name": f"Standard Clinical Protocol for {result_label}",
+                    "description": "Consult with a board-certified dermatologist for a personalized and certified medical treatment plan.",
+                    "duration_days": 14
+                }
+                db.treatments.insert_one(new_treatment)
                 
                 # Provision Nutrition Guidelines
                 nut_info = CLINICAL_NUTRITION_PROTOCOLS.get(result_label, CLINICAL_NUTRITION_PROTOCOLS["Normal Skin"])
-                new_nutrition_eat = NutritionRecommendation(
-                    disease_id=disease_entry.id,
-                    food_name=nut_info["eat"][:150],
-                    category="Recommended",
-                    benefit=nut_info["notes"]
-                )
-                new_nutrition_avoid = NutritionRecommendation(
-                    disease_id=disease_entry.id,
-                    food_name=nut_info["avoid"][:150],
-                    category="Avoid",
-                    benefit=nut_info["notes"]
-                )
-                db.session.add(new_nutrition_eat)
-                db.session.add(new_nutrition_avoid)
+                nutrition_id1 = db.nutrition_recommendations.count_documents({}) + 1
+                new_nutrition_eat = {
+                    "id": nutrition_id1,
+                    "disease_id": disease_id,
+                    "food_name": nut_info["eat"][:150],
+                    "category": "Recommended",
+                    "benefit": nut_info["notes"]
+                }
+                nutrition_id2 = nutrition_id1 + 1
+                new_nutrition_avoid = {
+                    "id": nutrition_id2,
+                    "disease_id": disease_id,
+                    "food_name": nut_info["avoid"][:150],
+                    "category": "Avoid",
+                    "benefit": nut_info["notes"]
+                }
+                db.nutrition_recommendations.insert_one(new_nutrition_eat)
+                db.nutrition_recommendations.insert_one(new_nutrition_avoid)
 
             # Insert an AILog entry for the model confidence tracking
-            new_ai_log = AILog(
-                image_path=f"/static/uploads/{filename}",
-                predicted_class=result_label,
-                confidence=confidence,
-                true_label="Unverified Application Scan"
-            )
-            db.session.add(new_ai_log)
+            ai_log_id = db.ai_logs.count_documents({}) + 1
+            new_ai_log = {
+                "id": ai_log_id,
+                "image_path": f"/static/uploads/{filename}",
+                "predicted_class": result_label,
+                "confidence": confidence,
+                "true_label": "Unverified Application Scan",
+                "created_at": datetime.utcnow()
+            }
+            db.ai_logs.insert_one(new_ai_log)
 
             # Optional: Add a baseline SymptomLog reference mapping the AI deduction directly 
-            new_symptom = SymptomLog(
-                user_id=user_id,
-                symptoms=f"System auto-scan uploaded an image indicating {result_label}.",
-                ai_prediction=result_label,
-                confidence_score=confidence
-            )
-            db.session.add(new_symptom)
+            symptom_id = db.symptom_logs.count_documents({}) + 1
+            new_symptom = {
+                "id": symptom_id,
+                "user_id": user_id,
+                "symptoms": f"System auto-scan uploaded an image indicating {result_label}.",
+                "ai_prediction": result_label,
+                "confidence_score": confidence,
+                "created_at": datetime.utcnow()
+            }
+            db.symptom_logs.insert_one(new_symptom)
 
-            db.session.commit()
             print("✅ Successfully inserted scan, timeline, disease, treatments, nutrition, and ai_logs to DB")
         except Exception as e:
             print("❌ DB Insert Failed:", e)
@@ -624,18 +575,24 @@ def get_timeline():
         return jsonify({"success": False, "error": "user_id required"}), 400
         
     try:
-        timeline_entries = HealingTimeline.query.filter_by(user_id=user_id).order_by(HealingTimeline.created_at.desc()).all()
+        # Convert user_id to int if possible, as we store it as int
+        try:
+            uid = int(user_id)
+        except:
+            uid = user_id
+
+        timeline_entries = list(db.healing_timeline.find({"user_id": uid}).sort("created_at", -1))
         history = []
         for s in timeline_entries:
             history.append({
-                "id": s.id,
-                "disease": s.disease,
-                "scan_image": s.scan_image,
-                "heatmap_image": s.heatmap_image,
-                "stage": s.stage,
-                "progress_percent": s.progress_percent,
-                "notes": s.notes,
-                "timestamp": s.created_at.isoformat() if s.created_at else None
+                "id": s.get("id"),
+                "disease": s.get("disease"),
+                "scan_image": s.get("scan_image"),
+                "heatmap_image": s.get("heatmap_image"),
+                "stage": s.get("stage"),
+                "progress_percent": s.get("progress_percent"),
+                "notes": s.get("notes"),
+                "timestamp": s.get("created_at").isoformat() if s.get("created_at") else None
             })
         return jsonify({"success": True, "history": history})
     except Exception as e:
@@ -682,16 +639,18 @@ def chat_endpoint():
         )
         reply_text = chat_completion.choices[0].message.content
 
-        # --- NEW: SAVE CONVERSATION TO MYSQL ---
+        # --- NEW: SAVE CONVERSATION TO MONGODB ---
         try:
             last_user_msg = messages[-1]["content"] if messages else ""
-            new_chat = ChatbotConversation(
-                user_id=user_id,
-                user_message=last_user_msg,
-                bot_response=reply_text
-            )
-            db.session.add(new_chat)
-            db.session.commit()
+            chat_id = db.chatbot_conversations.count_documents({}) + 1
+            new_chat = {
+                "id": chat_id,
+                "user_id": user_id,
+                "user_message": last_user_msg,
+                "bot_response": reply_text,
+                "created_at": datetime.utcnow()
+            }
+            db.chatbot_conversations.insert_one(new_chat)
             print("✅ Chat saved to database!")
         except Exception as e:
             print(f"❌ Chat DB Insert Failed: {e}")
@@ -707,14 +666,16 @@ def chat_endpoint():
 def log_symptom():
     data = request.json
     try:
-        new_log = SymptomLog(
-            user_id=data.get("user_id", 1),
-            symptoms=data.get("symptoms", ""),
-            ai_prediction=data.get("ai_prediction", ""),
-            confidence_score=90.0
-        )
-        db.session.add(new_log)
-        db.session.commit()
+        symptom_id = db.symptom_logs.count_documents({}) + 1
+        new_log = {
+            "id": symptom_id,
+            "user_id": data.get("user_id", 1),
+            "symptoms": data.get("symptoms", ""),
+            "ai_prediction": data.get("ai_prediction", ""),
+            "confidence_score": 90.0,
+            "created_at": datetime.utcnow()
+        }
+        db.symptom_logs.insert_one(new_log)
         return jsonify({"success": True})
     except Exception as e:
         print("Failed to save symptom log:", e)
@@ -724,13 +685,15 @@ def log_symptom():
 def save_chat():
     data = request.json
     try:
-        new_chat = ChatbotConversation(
-            user_id=data.get("user_id", 1),
-            user_message=data.get("user_message", ""),
-            bot_response=data.get("bot_response", "")
-        )
-        db.session.add(new_chat)
-        db.session.commit()
+        chat_id = db.chatbot_conversations.count_documents({}) + 1
+        new_chat = {
+            "id": chat_id,
+            "user_id": data.get("user_id", 1),
+            "user_message": data.get("user_message", ""),
+            "bot_response": data.get("bot_response", ""),
+            "created_at": datetime.utcnow()
+        }
+        db.chatbot_conversations.insert_one(new_chat)
         return jsonify({"success": True})
     except Exception as e:
         print("Failed to save chatbot convo:", e)
@@ -740,17 +703,19 @@ def save_chat():
 def save_smart_mirror():
     data = request.json
     try:
-        new_scan = SmartMirrorScan(
-            user_id=data.get("user_id", 1),
-            image_path=data.get("image_path", "/static/uploads/mirror_mock.jpg"),
-            redness_score=data.get("redness_score", 0.0),
-            hydration_level=data.get("hydration_level", 0.0),
-            pore_score=data.get("pore_score", 0.0),
-            acne_score=data.get("acne_score", 0.0),
-            analysis_summary=data.get("analysis_summary", "")
-        )
-        db.session.add(new_scan)
-        db.session.commit()
+        mirror_id = db.smart_mirror_scans.count_documents({}) + 1
+        new_scan = {
+            "id": mirror_id,
+            "user_id": data.get("user_id", 1),
+            "image_path": data.get("image_path", "/static/uploads/mirror_mock.jpg"),
+            "redness_score": data.get("redness_score", 0.0),
+            "hydration_level": data.get("hydration_level", 0.0),
+            "pore_score": data.get("pore_score", 0.0),
+            "acne_score": data.get("acne_score", 0.0),
+            "analysis_summary": data.get("analysis_summary", ""),
+            "created_at": datetime.utcnow()
+        }
+        db.smart_mirror_scans.insert_one(new_scan)
         return jsonify({"success": True})
     except Exception as e:
         print("Failed to save smart mirror scan:", e)
@@ -802,11 +767,6 @@ if __name__ == "__main__":
     if not os.path.exists(UPLOAD_FOLDER):
         os.makedirs(UPLOAD_FOLDER)
     
-    with app.app_context():
-        try:
-            db.create_all() 
-        except:
-            print("DB Schema creation skipped - DB might not be running.")
 
     print("🚀 DermaVision API is live at http://127.0.0.1:5000")
     app.run(debug=True, port=5000)
