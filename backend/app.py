@@ -17,6 +17,14 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# --- Memory Optimization for Render Free Tier ---
+# Disable eager execution can help reduce memory footprint during inference
+tf.compat.v1.disable_eager_execution()
+# Limit intra/inter op threads to reduce memory overhead from thread pools
+tf.config.threading.set_intra_op_parallelism_threads(1)
+tf.config.threading.set_inter_op_parallelism_threads(1)
+# ------------------------------------------------
+
 # -------------------------------
 # FLASK APP CONFIG
 # -------------------------------
