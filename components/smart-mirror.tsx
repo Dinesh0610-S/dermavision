@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Camera, RefreshCw, Layers, Droplet, Activity, ScanLine, XCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { getApiUrl } from "@/lib/api-config"
 
 export function SmartMirrorView() {
   const [isActive, setIsActive] = useState(false)
@@ -33,7 +34,7 @@ export function SmartMirrorView() {
 
         // Fetch the raw real-time detection from the Python backend
         try {
-          const res = await fetch("http://127.0.0.1:5000/api/latest_prediction")
+          const res = await fetch(getApiUrl("/api/latest_prediction"))
           const data = await res.json()
           setPrediction({
             disease: data.disease,
@@ -62,7 +63,7 @@ export function SmartMirrorView() {
   const toggleCamera = async () => {
     if (isActive) {
       try {
-        await fetch("http://127.0.0.1:5000/api/stop_camera", { method: "POST" })
+        await fetch(getApiUrl("/api/stop_camera"), { method: "POST" })
         
         // Save scan results
         let activeUserId = 1
@@ -74,7 +75,7 @@ export function SmartMirrorView() {
           }
         } catch (e) { console.error(e) }
 
-        await fetch("http://127.0.0.1:5000/api/save_smart_mirror", {
+        await fetch(getApiUrl("/api/save_smart_mirror"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -143,7 +144,7 @@ export function SmartMirrorView() {
               {/* Actual Video Feed from Python Backend */}
               {isActive && (
                 <img
-                  src="http://127.0.0.1:5000/video_feed"
+                  src={getApiUrl("/video_feed")}
                   alt="Live AI Stream"
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ transform: "scaleX(-1)" }} // Mirror effect

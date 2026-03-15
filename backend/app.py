@@ -32,8 +32,12 @@ load_dotenv()
 # -------------------------------
 
 app = Flask(__name__)
-# Enable CORS for Next.js frontend running on localhost:3000
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*"}})
+# Enable CORS for Next.js frontend running on Vercel and local
+CORS(app, supports_credentials=True, resources={r"/*": {
+    "origins": "*",
+    "methods": ["GET", "POST", "OPTIONS"],
+    "allow_headers": ["Content-Type", "Authorization"]
+}})
 app.secret_key = os.environ.get("SECRET_KEY", "derma_vision_final_stable_key")
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -804,5 +808,7 @@ if __name__ == "__main__":
         os.makedirs(UPLOAD_FOLDER)
     
 
-    print("🚀 DermaVision API is live at http://127.0.0.1:5000")
-    app.run(debug=True, port=5000)
+    # Local development
+    port = int(os.environ.get("PORT", 10000))
+    print(f"🚀 DermaVision API is live at http://0.0.0.0:{port}")
+    app.run(host="0.0.0.0", port=port, debug=True)

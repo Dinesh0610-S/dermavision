@@ -1,5 +1,6 @@
 import { groq } from '@ai-sdk/groq';
 import { streamText } from 'ai';
+import { getApiUrl } from '@/lib/api-config';
 
 export const maxDuration = 30;
 
@@ -20,7 +21,7 @@ At the end of your response, always kindly remind the user that AI can make mist
         const user_message = messages.length > 0 ? messages[messages.length - 1].content : ""
         const ai_response = event.text
         
-        await fetch("http://127.0.0.1:5000/api/log_symptom", {
+        await fetch(getApiUrl("/api/log_symptom"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 
@@ -30,7 +31,7 @@ At the end of your response, always kindly remind the user that AI can make mist
             })
         });
         
-        await fetch("http://127.0.0.1:5000/api/save_chat", {
+        await fetch(getApiUrl("/api/save_chat"), {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ 

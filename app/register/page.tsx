@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { Activity, Mail, Lock, User, ArrowRight, Phone } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getApiUrl } from "@/lib/api-config"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -34,7 +35,7 @@ export default function RegisterPage() {
     setIsHandlingAuth(true)
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/register", {
+      const response = await fetch(getApiUrl("/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: name, email, password, phone }),

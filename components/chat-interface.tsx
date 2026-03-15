@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react"
 import { Send, Bot, User, Sparkles, Loader2, Maximize2, Minimize2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { getApiUrl } from "@/lib/api-config"
 
 interface Message {
   id: string
@@ -58,7 +59,7 @@ export function ChatInterface({ fullScreen = false }: { fullScreen?: boolean }) 
       } catch (e) { console.error(e) }
 
       // Send the entire message history to context-aware Llama backend
-      const response = await fetch("http://127.0.0.1:5000/chat", {
+      const response = await fetch(getApiUrl("/chat"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 

@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react"
 import { Calendar, TrendingUp, ChevronRight, CheckCircle2, AlertCircle, Loader2 } from "lucide-react"
 import gsap from "gsap"
 import { useGSAP } from "@gsap/react"
+import { getApiUrl } from "@/lib/api-config"
 
 const timelineData = [
   { day: 1, title: "Initial Scan", change: 0, status: "baseline", notes: "Severe inflammation detected. Assigned clinical plan." },
@@ -68,7 +69,7 @@ export function HealingTimeline() {
       formData.append("current_image", currentFile)
 
       try {
-        const response = await fetch("http://127.0.0.1:5000/api/compare_healing", {
+        const response = await fetch(getApiUrl("/api/compare_healing"), {
           method: "POST",
           body: formData,
         })

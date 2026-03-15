@@ -4,6 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react"
 import { Upload, X, Scan, Brain, Activity, CheckCircle2, Volume2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import gsap from "gsap"
+import { getApiUrl } from "@/lib/api-config"
 import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
 
@@ -252,7 +253,7 @@ export function AIScanSection() {
       formData.append("user_email", activeUserEmail) // Dynamic from full auth later
 
       // Call Python Backend
-      const response = await fetch("http://127.0.0.1:5000/api/predict", {
+      const response = await fetch(getApiUrl("/api/predict"), {
         method: "POST",
         body: formData,
       })
