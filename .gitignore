@@ -40,7 +40,7 @@ venv/
 ENV/
 env/
 .env
-*.keras
+# *.keras (Removed to allow model push, but LFS recommended for >100MB)
 
 # Backend specific
 backend/static/uploads/*
