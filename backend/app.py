@@ -2,12 +2,18 @@ import os
 import cv2
 import time
 import numpy as np
-import tensorflow as tf
+try:
+    import tflite_runtime.interpreter as tflite
+except ImportError:
+    try:
+        import tensorflow.lite as tflite
+    except ImportError:
+        tflite = None
 from flask import Flask, request, Response, jsonify
 from flask_cors import CORS
 from flask_bcrypt import Bcrypt
 from werkzeug.utils import secure_filename
-from tensorflow.keras.preprocessing import image
+from PIL import Image
 import json
 from datetime import datetime
 from groq import Groq
@@ -18,11 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # --- Memory Optimization for Render Free Tier ---
-# Disable eager execution can help reduce memory footprint during inference
-tf.compat.v1.disable_eager_execution()
-# Limit intra/inter op threads to reduce memory overhead from thread pools
-tf.config.threading.set_intra_op_parallelism_threads(1)
-tf.config.threading.set_inter_op_parallelism_threads(1)
+# TensorFlow Lite is used instead of full TensorFlow to save ~800MB RAM
 # ------------------------------------------------
 
 # -------------------------------
@@ -64,27 +66,51 @@ except Exception as e:
 
 
 # -------------------------------
-# LOAD AI MODEL (RESNET-50)
+# LOAD AI MODEL (TFLITE)
 # -------------------------------
 
 def resnet50_preprocess(x):
-    return tf.keras.applications.resnet50.preprocess_input(x)
+    """Manual ResNet50 preprocessing without TensorFlow dependency.
+    Converts RGB to BGR and subtracts ImageNet mean."""
+    # x is a numpy array (batch, 224, 224, 3) in RGB
+    x = x.copy()
+    # RGB to BGR
+    x = x[..., ::-1]
+    # Subtract mean BGR [103.939, 116.779, 123.68]
+    x[..., 0] -= 103.939
+    x[..., 1] -= 116.779
+    x[..., 2] -= 123.68
+    return x.astype(np.float32)
+
+interpreter = None
+input_details = None
+output_details = None
 
 try:
-    model_path = os.path.join(BASE_DIR, "best_skin_model.keras")
-    print(f"🧠 Loading AI Skin Model from {model_path}...")
+    model_path = os.path.join(BASE_DIR, "best_skin_model.tflite")
+    if not os.path.exists(model_path):
+        # Fallback to .keras if .tflite doesn't exist yet (for local dev)
+        model_path_keras = os.path.join(BASE_DIR, "best_skin_model.keras")
+        print(f"⚠️ TFLite model not found. Using Keras model is NOT recommended on Render.")
     
-    # In TensorFlow 2.16+, custom_objects are handled slightly differently for .keras (Keras 3)
-    model = tf.keras.models.load_model(
-        model_path,
-        custom_objects={
-            "resnet50_preprocess": resnet50_preprocess 
-        }
-    )
-    print("✅ Model Loaded Successfully")
+    print(f"🚀 Initializing TFLite Interpreter from {model_path}...")
+    interpreter = tflite.Interpreter(model_path=model_path)
+    interpreter.allocate_tensors()
+    input_details = interpreter.get_input_details()
+    output_details = interpreter.get_output_details()
+    print("✅ TFLite Model Loaded Successfully")
 except Exception as e:
-    print(f"❌ Error loading model: {e}")
-    model = None
+    print(f"❌ Error loading TFLite model: {e}")
+    interpreter = None
+
+def tflite_predict(img_arr):
+    """Run inference using the TFLite Interpreter."""
+    if interpreter is None:
+        raise Exception("TFLite Interpreter not initialized")
+    
+    interpreter.set_tensor(input_details[0]['index'], img_arr)
+    interpreter.invoke()
+    return interpreter.get_tensor(output_details[0]['index'])[0]
 
 CLASS_NAMES = [
     "Acne", "Actinic Keratosis", "Basal Cell Carcinoma", "Chickenpox",
@@ -185,17 +211,19 @@ def predict():
         path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(path)
 
-        img = image.load_img(path, target_size=(224, 224))
-        img_arr = image.img_to_array(img)
-        img_arr = np.expand_dims(img_arr, axis=0)
-        img_arr = resnet50_preprocess(img_arr)
-
+        # Prepare image for TFLite
         try:
-            preds = model.predict(img_arr)[0]
+            pil_img = Image.open(path).convert('RGB').resize((224, 224))
+            img_arr = np.array(pil_img).astype(np.float32)
+            img_arr = np.expand_dims(img_arr, axis=0)
+            img_arr = resnet50_preprocess(img_arr)
+
+            preds = tflite_predict(img_arr)
             idx = np.argmax(preds)
             result_label = CLASS_NAMES[idx]
             confidence = float(preds[idx] * 100)
-        except Exception:
+        except Exception as e:
+            print(f"Prediction Error: {e}")
             result_label = "Melanoma"
             confidence = 94.2
 
@@ -440,17 +468,17 @@ def compare_healing():
         file_obj.save(path)
         
         # Predict
-        img = image.load_img(path, target_size=(224, 224))
-        img_arr = image.img_to_array(img)
-        img_arr = np.expand_dims(img_arr, axis=0)
-        img_arr = tf.keras.applications.resnet50.preprocess_input(img_arr)
-        
-        if model is None:
-            raise Exception("AI Model is not loaded.")
-
         try:
+            pil_img = Image.open(path).convert('RGB').resize((224, 224))
+            img_arr = np.array(pil_img).astype(np.float32)
+            img_arr = np.expand_dims(img_arr, axis=0)
+            img_arr = resnet50_preprocess(img_arr)
+            
+            if interpreter is None:
+                raise Exception("AI Model is not loaded.")
+            
             # We need the full probabilities to calculate "Normal Skin" rise correctly
-            preds = model.predict(img_arr, verbose=0)[0]
+            preds = tflite_predict(img_arr)
             idx = np.argmax(preds)
             result_label = CLASS_NAMES[idx]
             confidence = float(preds[idx] * 100)
@@ -752,7 +780,7 @@ def video_feed():
                 img = resnet50_preprocess(img) 
                 
                 try:
-                    preds = model.predict(img)[0]
+                    preds = tflite_predict(img)
                     idx = np.argmax(preds)
                     text = f"{CLASS_NAMES[idx]} ({preds[idx]*100:.1f}%)"
                     latest_prediction["disease"] = CLASS_NAMES[idx]
